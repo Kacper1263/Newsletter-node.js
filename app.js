@@ -5,8 +5,8 @@ var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'mail',
-        pass: 'pass'
+        user: 'email',
+        pass: 'password'
     }
 });
 
@@ -91,12 +91,15 @@ client.on("message", async msg => {
                             description: "Error: \n**"+err+"**"
                         }});
                     });
+
+                    var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so if I need to delete everything before first dot
+                    db.delete("Temp."+splitedEmail[0]);
                 }
                 else{
                     m.then(_m =>{
                         _m.edit({embed: {
                             color: 0x04ff00,
-                            description: "The verification code has been sent. To confirm the email type (example): **>confirmEmail my.mail@gmail.com 1234**"
+                            description: "The verification code has been sent. To confirm the email type (example): **>confirmEmail " + email + " YOUR_CODE_HERE**"
                         }});
                     });                    
                 }
@@ -159,6 +162,9 @@ client.on("message", async msg => {
                     color: 0x04ff00,
                     description: "An email (**" + email + "**) has been successfully added to the database"
                 }});
+
+                var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so if I need to delete everything before first dot
+                db.delete("Temp."+splitedEmail[0]);
             }
             else{
                 msg.channel.send({embed: {
