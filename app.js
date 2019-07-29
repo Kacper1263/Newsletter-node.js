@@ -105,7 +105,7 @@ client.on("message", async msg => {
                         }});
                     });
 
-                    var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so if I need to delete everything before first dot
+                    var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so I need to delete everything before first dot
                     db.delete("Temp."+splitedEmail[0]);
                 }
                 else{
@@ -176,7 +176,7 @@ client.on("message", async msg => {
                     description: "An email (**" + email + "**) has been successfully added to the database"
                 }});
 
-                var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so if I need to delete everything before first dot
+                var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so I need to delete everything before first dot
                 db.delete("Temp."+splitedEmail[0]);
             }
             else{
@@ -191,7 +191,16 @@ client.on("message", async msg => {
     }
 
     if(command == "send"){
-        if(!msg.member.roles.find(r=> r.name == "Admin")){
+        if(msg.member == null){
+            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+                msg.channel.send({embed:{
+                    color: 0xff0000,
+                    description: "Permission denied!"
+                }});
+                return;
+            }
+        }
+        else if(!msg.member.roles.find(r=> r.name == "Admin")){
             msg.channel.send({embed:{
                 color: 0xff0000,
                 description: "Permission denied!"
@@ -253,7 +262,19 @@ client.on("message", async msg => {
     }
 
     if(command == "all"){
-        if(msg.member.roles.find(r=> r.name == "Admin")){
+        if(msg.member == null){
+            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+                msg.channel.send({embed:{
+                    color: 0xff0000,
+                    description: "Permission denied!"
+                }});
+                return;
+            }
+            else{
+                msg.channel.send("```json\n"+JSON.stringify(db.all(), null, "\t")+ "```");
+            }
+        }
+        else if(msg.member.roles.find(r=> r.name == "Admin")){
             msg.channel.send("```json\n"+JSON.stringify(db.all(), null, "\t")+ "```");
         }
         else{
