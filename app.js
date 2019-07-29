@@ -5,8 +5,8 @@ var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'email@gmail.com',
-        pass: '1234'
+        user: 'mail',
+        pass: 'pass'
     }
 });
 
@@ -27,7 +27,7 @@ client.on("message", async msg => {
 
     if(command == "register"){
         if(args[0] == null){
-            msg.reply({embed: {
+            msg.channel.send({embed: {
                 color: 0xffdd00,
                 description: "You didn't give enough arguments! Example: **>register my.mail@gmail.com**"
             }});
@@ -37,7 +37,7 @@ client.on("message", async msg => {
         else{            
             var email = args[0];
             if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
-                msg.reply({embed: {
+                msg.channel.send({embed: {
                     color: 0xffdd00,
                     description: "**" + email + "** does not look like an email!"
                 }});
@@ -48,7 +48,7 @@ client.on("message", async msg => {
             if(list != null){
                 list.forEach(_mail => {
                     if(_mail == email){
-                        msg.reply({embed: {
+                        msg.channel.send({embed: {
                             color: 0xffdd00,
                             description: "**" + email + "** exists in the database!"
                         }});
@@ -107,7 +107,7 @@ client.on("message", async msg => {
 
     if(command == "confirmEmail"){
         if(args[0] == null || args[1] == null){
-            msg.reply({embed: {
+            msg.channel.send({embed: {
                 color: 0xffdd00,
                 description: "You didn't give enough arguments! Example: **>confirmEmail my.mail@gmail.com 1234**"
             }});
@@ -116,7 +116,7 @@ client.on("message", async msg => {
         else{
             var email = args[0];
             if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
-                msg.reply({embed: {
+                msg.channel.send({embed: {
                     color: 0xffdd00,
                     description: "**" + email + "** does not look like an email!"
                 }});
@@ -125,7 +125,7 @@ client.on("message", async msg => {
 
             var code = args[1];
             if(code.length != 4){
-                msg.reply({embed: {
+                msg.channel.send({embed: {
                     color: 0xff0000,
                     description: "Bad verification code!"
                 }});
@@ -137,7 +137,7 @@ client.on("message", async msg => {
             if(list != null){
                 list.forEach(_mail => {
                     if(_mail == email){
-                        msg.reply({embed: {
+                        msg.channel.send({embed: {
                             color: 0xffdd00,
                             description: "**" + email + "** exists in the database!"
                         }});
@@ -155,13 +155,13 @@ client.on("message", async msg => {
             //Check code
             if(db.get("Temp."+email+"."+"verificationCode") == code){
                 db.push("emailList", email)
-                msg.reply({embed: {
+                msg.channel.send({embed: {
                     color: 0x04ff00,
                     description: "An email (**" + email + "**) has been successfully added to the database"
                 }});
             }
             else{
-                msg.reply({embed: {
+                msg.channel.send({embed: {
                     color: 0xff0000,
                     description: "Bad verification code or email!"
                 }});
@@ -172,6 +172,14 @@ client.on("message", async msg => {
     }
 
     if(command == "send"){
+        if(!msg.member.roles.find(r=> r.name == "Admin")){
+            msg.channel.send({embed:{
+                color: 0xff0000,
+                description: "Permission denied!"
+            }});
+            return;
+        }
+
         var list = db.get("emailList");
         if(list != null){
             var counterOK = 0;
@@ -218,17 +226,29 @@ client.on("message", async msg => {
             });
         }
         else{
-            msg.reply({embed: {
+            msg.channel.send({embed: {
                 color: 0xff0000,
                 description: "Database is empty!"
             }});
         }
     }
 
+    if(command == "all"){
+        if(msg.member.roles.find(r=> r.name == "Admin")){
+            msg.channel.send("```json\n"+JSON.stringify(db.all(), null, "\t")+ "```");
+        }
+        else{
+            msg.channel.send({embed:{
+                color: 0xff0000,
+                description: "Permission denied!"
+            }});
+        }
+    }
+
     if(command == "help"){
-        msg.reply("To add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nExample: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n >send will send email to all registered users");
+        msg.reply("To add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database");
     }
 
 });
 
-client.login(TOKEN);
+client.login("TOKEN");
