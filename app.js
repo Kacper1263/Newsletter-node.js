@@ -13,18 +13,18 @@
 
 const db = require('quick.db');
 const Discord = require("discord.js");
+const config = require('./config.json');
 var nodemailer = require('nodemailer');
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'email',
-        pass: 'password'
+        user: config.Gmail,
+        pass: config.GmailPassword
     }
 });
 
 const client = new Discord.Client();
-
 
 client.on("ready", () => {
     console.log("Ready");
@@ -291,4 +291,4 @@ client.on("message", async msg => {
 
 });
 
-client.login("TOKEN");
+client.login(config.Token);
