@@ -10,6 +10,11 @@
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+//--------------------CONFIG--------------------//
+//                                              //
+    const newsletterHTML = '<div style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is newsletter</div>';
+//                                              //
+//----------------------------------------------//
 
 const db = require('quick.db');
 const Discord = require("discord.js");
@@ -26,9 +31,25 @@ var transporter = nodemailer.createTransport({
 
 const client = new Discord.Client();
 
+client.on("error", error => {
+    console.log();
+    console.log("Error: ");
+    console.log(error);
+    console.log();
+
+    //Send error in PM to bot owner
+    client.fetchUser("329706346826039297").then(user =>{    
+        user.send("**Bot error: **\n" + error);
+    });
+});
+
+client.on("disconnect", ()=> console.log("Disconnected!"));
+client.on("reconnecting", () => console.log("Reconnecting..."));
+client.on("resume", () => console.log("Resumed"));
+
 client.on("ready", () => {
     console.log("Ready");
-    client.user.setActivity(`>help`);
+    client.user.setActivity(`>help`);    
 });
 
 client.on("message", async msg => {
@@ -88,7 +109,7 @@ client.on("message", async msg => {
                 from: 'marcinkiewicz.kacper@gmail.com', // sender address
                 to: email, // list of receivers
                 subject: 'Newsletter confirm', // Subject line
-                html: '<p>This is your verification code: <b>'+ random +'</b></p>'// plain text body
+                html: '<p style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is your verification code: <b style="background-color: white;border-radius: 10px;padding: 5px;color: black; margin-left: 5px;margin-right: 5px;">'+ random +'</b></p>'// plain text body
             };
 
             var m = msg.channel.send({embed: {
@@ -228,7 +249,7 @@ client.on("message", async msg => {
                     from: 'marcinkiewicz.kacper@gmail.com', // sender address
                     to: _mail, // list of receivers
                     subject: 'Newsletter', // Subject line
-                    html: '<p>This is newsletter</p>'// plain text body
+                    html: newsletterHTML// plain text body
                   };
     
                 transporter.sendMail(mailOptions, function(err, info){
