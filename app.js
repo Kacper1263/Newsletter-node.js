@@ -23,6 +23,17 @@ const config = require('./config.json');
 var nodemailer = require('nodemailer');
 const util = require('util');
 
+//New DB
+const low = require('lowdb')
+const FileSync = require('lowdb/adapters/FileSync')
+ 
+const adapter = new FileSync('db.json')
+const newDb = low(adapter)
+///NewDB
+
+newDb.defaults({ Temp: [], emailList: [] })
+  .write()
+
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -79,10 +90,13 @@ client.on("message", async msg => {
                 }});
                 return;
             }
+
             var exist = false;
-            var list = db.get("emailList");
-            if(list != null){
-                list.forEach(_mail => {
+            var listLength = newDb.get("emailList").size().value();
+            var list = newDb.get("emailList").value();
+            
+            list.forEach(_mail => {
+                if(list != null && listLength != 0){
                     if(_mail == email){
                         msg.channel.send({embed: {
                             color: 0xffdd00,
@@ -92,8 +106,8 @@ client.on("message", async msg => {
                         exist = true;
                         return;
                     }
-                });
-            }            
+                }
+            });                              
             
             if(exist){
                 return;
@@ -101,11 +115,13 @@ client.on("message", async msg => {
 
             var rand1 = Math.floor(Math.random() * 10).toString();
             var rand2 = Math.floor(Math.random() * 10).toString();
-            var rand3 = Math.floor(Math.random() * 10).toString();
+            var rand3 = Math.floor(Math.random() * 10).toString(); 
             var rand4 = Math.floor(Math.random() * 10).toString();
             var random = (rand1 + rand2 + rand3 + rand4).toString();
             
-            db.set("Temp."+email+"."+"verificationCode", random);
+            if(newDb.get("Temp").find({"email": email}).value()){
+                newDb.get("Temp").find({"email": email}).assign({"email": email, "code": random}).write();
+            }else newDb.get("Temp").push({"email": email, "code": random}).write();
 
             const mailOptions = {
                 from: 'marcinkiewicz.kacper@gmail.com', // sender address
@@ -128,8 +144,7 @@ client.on("message", async msg => {
                         }});
                     });
 
-                    var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so I need to delete everything before first dot
-                    db.delete("Temp."+splitedEmail[0]);
+                    newDb.get("Temp").remove({"email": email}).write();
                 }
                 else{
                     m.then(_m =>{
@@ -171,20 +186,23 @@ client.on("message", async msg => {
                 return;
             }
 
-            var exist = false;
-            var list = db.get("emailList");
-            if(list != null){
-                list.forEach(_mail => {
+            var exist = false;            
+            var listLength = newDb.get("emailList").size().value();
+            var list = newDb.get("emailList").value();
+            
+            list.forEach(_mail => {
+                if(list != null && listLength != 0){
                     if(_mail == email){
                         msg.channel.send({embed: {
                             color: 0xffdd00,
                             description: "**" + email + "** exists in the database!"
                         }});
+                        
                         exist = true;
                         return;
                     }
-                });
-            }            
+                }
+            });      
             
             if(exist){
                 return;
@@ -192,15 +210,14 @@ client.on("message", async msg => {
 
             
             //Check code
-            if(db.get("Temp."+email+"."+"verificationCode") == code){
-                db.push("emailList", email)
+            if(newDb.get("Temp").find({"email": email}).value().code == code){
+                newDb.get("emailList").push(email).write();
                 msg.channel.send({embed: {
                     color: 0x04ff00,
                     description: "An email (**" + email + "**) has been successfully added to the database"
                 }});
 
-                var splitedEmail = email.split("."); //Arguments in DB are separated by "."" so I need to delete everything before first dot
-                db.delete("Temp."+splitedEmail[0]);
+                newDb.get("Temp").remove({"email": email}).write();
             }
             else{
                 msg.channel.send({embed: {
@@ -231,8 +248,9 @@ client.on("message", async msg => {
             return;
         }
 
-        var list = db.get("emailList");
-        if(list != null){
+        var listLength = newDb.get("emailList").size().value();
+        var list = newDb.get("emailList").value();
+        if(list != null && listLength != 0){
             var counterOK = 0;
             var counterAll = 0;
             counterAll = list.length;
@@ -294,7 +312,7 @@ client.on("message", async msg => {
                 return;
             }
             else{
-                msg.channel.send("```json\n"+JSON.stringify(db.all(), null, "\t")+ "```");
+                msg.channel.send("```json\n"+JSON.stringify(newDb.value(), null, "\t")+ "```");
             }
         }
         else if(msg.member.roles.find(r=> r.name == "Admin")){
