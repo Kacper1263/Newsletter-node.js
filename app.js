@@ -30,8 +30,7 @@ const adapter = new FileSync('db.json')
 const db = low(adapter)
 ///NewDB
 
-db.defaults({ Temp: [], emailList: [] })
-  .write()
+db.defaults({ Temp: [], emailList: [] }).write()
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -55,9 +54,9 @@ client.on("error", error => {
     });
 });
 
-client.on("disconnect", ()=> console.log("Disconnected!"));
+client.on("disconnect", ()=> console.log("\nDisconnected!"));
 client.on("reconnecting", () => console.log("Reconnecting..."));
-client.on("resume", () => console.log("Resumed"));
+client.on("resume", () => console.log("Resumed\n"));
 
 client.on("ready", () => {
     console.log("Ready");
