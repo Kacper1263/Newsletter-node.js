@@ -316,7 +316,7 @@ client.on("message", async msg => {
             }
         }
         else if(msg.member.roles.find(r=> r.name == "Admin")){
-            msg.channel.send("```json\n"+JSON.stringify(db.all(), null, "\t")+ "```");
+            msg.channel.send("```json\n"+JSON.stringify(newDb.value(), null, "\t")+ "```");
         }
         else{
             msg.channel.send({embed:{
