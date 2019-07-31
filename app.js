@@ -13,6 +13,7 @@
 //--------------------CONFIG--------------------//
 //                                              //
     const newsletterHTML = '<div style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is newsletter</div>';
+    const registerHTML = '<p style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is your verification code: <b style="background-color: white;border-radius: 10px;padding: 5px;color: black; margin-left: 5px;margin-right: 5px;"> %s </b></p>';
 //                                              //
 //----------------------------------------------//
 
@@ -20,6 +21,7 @@ const db = require('quick.db');
 const Discord = require("discord.js");
 const config = require('./config.json');
 var nodemailer = require('nodemailer');
+const util = require('util');
 
 var transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -49,7 +51,7 @@ client.on("resume", () => console.log("Resumed"));
 
 client.on("ready", () => {
     console.log("Ready");
-    client.user.setActivity(`>help`);    
+    client.user.setActivity(`>help`);   
 });
 
 client.on("message", async msg => {
@@ -109,9 +111,9 @@ client.on("message", async msg => {
                 from: 'marcinkiewicz.kacper@gmail.com', // sender address
                 to: email, // list of receivers
                 subject: 'Newsletter confirm', // Subject line
-                html: '<p style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is your verification code: <b style="background-color: white;border-radius: 10px;padding: 5px;color: black; margin-left: 5px;margin-right: 5px;">'+ random +'</b></p>'// plain text body
+                html: util.format(registerHTML, random) // replace %s (from const) with random code
             };
-
+            
             var m = msg.channel.send({embed: {
                 color: 0xffdd00,
                 description: "Sending email..."
@@ -305,6 +307,32 @@ client.on("message", async msg => {
             }});
         }
     }
+
+    // Not working with quick.db. Needed other database lib
+    // if(command == "unregister" || command == "delete"){  
+    //     if(args[0] != null){
+    //         if(args[1] == "--force"){
+    //             if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+    //                 msg.channel.send({embed:{
+    //                     color: 0xff0000,
+    //                     description: "Permission denied!"
+    //                 }});
+    //                 return;
+    //             }
+    //             else{ 
+    //                 console.log(args[0]);
+    //                 db.delete(`emailList.${args[0]}`);
+    //             }
+    //         }
+    //         else{
+    //             msg.channel.send({embed:{
+    //                 color: 0xffdd00,
+    //                 description: "Coming soon!"
+    //             }});
+    //             return;
+    //         }
+    //     }
+    // }
 
     if(command == "help"){
         msg.reply("To add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database");
