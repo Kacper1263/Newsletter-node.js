@@ -326,34 +326,60 @@ client.on("message", async msg => {
         }
     }
 
-    // Not working with quick.db. Needed other database lib
-    // if(command == "unregister" || command == "delete"){  
-    //     if(args[0] != null){
-    //         if(args[1] == "--force"){
-    //             if(!msg.author.id == "329706346826039297"){ //Bot owner ID
-    //                 msg.channel.send({embed:{
-    //                     color: 0xff0000,
-    //                     description: "Permission denied!"
-    //                 }});
-    //                 return;
-    //             }
-    //             else{ 
-    //                 console.log(args[0]);
-    //                 db.delete(`emailList.${args[0]}`);
-    //             }
-    //         }
-    //         else{
-    //             msg.channel.send({embed:{
-    //                 color: 0xffdd00,
-    //                 description: "Coming soon!"
-    //             }});
-    //             return;
-    //         }
-    //     }
-    // }
+    if(command == "unregister" || command == "delete"){  
+        if(args[0] != null){
+            if(args[1] == "--force"){
+                if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+                    msg.channel.send({embed:{
+                        color: 0xff0000,
+                        description: "Permission denied!"
+                    }});
+                    return;
+                }
+                else{
+                    //delete from db
+                    var indexToDelete = newDb.get("emailList").indexOf(args[0]).value();
+                    if(indexToDelete != -1){
+                        if(newDb.get("emailList").splice(indexToDelete).write() != null){
+                            msg.channel.send({embed:{
+                                color: 0x04ff00,
+                                description: "Successfully removed (**"+ args[0] + "**) from database!"
+                            }});
+                        }
+                        else{
+                            msg.channel.send({embed:{
+                                color: 0xff0000,
+                                description: "The email could not be deleted!"
+                            }});
+                        }
+                    }
+                    else{
+                        msg.channel.send({embed:{
+                            color: 0xff0000,
+                            description: "Email not found!"
+                        }});
+                    }
+                }
+            }
+            else{
+                msg.channel.send({embed:{
+                    color: 0xffdd00,
+                    description: "Coming soon!"
+                }});
+                return;
+            }
+        }
+        else{
+            msg.channel.send({embed:{
+                color: 0xffdd00,
+                description: "No email was provided!"
+            }});
+            return;
+        }
+    }
 
     if(command == "help"){
-        msg.reply("To add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database");
+        msg.reply("\nTo add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nTo delete your email from database enter **>unregister <your email>.** After receiving the verification code, enter **>confirmUnregister <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database");
     }
 
 });
