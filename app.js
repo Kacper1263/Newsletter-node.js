@@ -17,7 +17,6 @@
 //                                              //
 //----------------------------------------------//
 
-const db = require('quick.db');
 const Discord = require("discord.js");
 const config = require('./config.json');
 var nodemailer = require('nodemailer');
@@ -28,10 +27,10 @@ const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
  
 const adapter = new FileSync('db.json')
-const newDb = low(adapter)
+const db = low(adapter)
 ///NewDB
 
-newDb.defaults({ Temp: [], emailList: [] })
+db.defaults({ Temp: [], emailList: [] })
   .write()
 
 var transporter = nodemailer.createTransport({
@@ -92,8 +91,8 @@ client.on("message", async msg => {
             }
 
             var exist = false;
-            var listLength = newDb.get("emailList").size().value();
-            var list = newDb.get("emailList").value();
+            var listLength = db.get("emailList").size().value();
+            var list = db.get("emailList").value();
             
             list.forEach(_mail => {
                 if(list != null && listLength != 0){
@@ -119,9 +118,9 @@ client.on("message", async msg => {
             var rand4 = Math.floor(Math.random() * 10).toString();
             var random = (rand1 + rand2 + rand3 + rand4).toString();
             
-            if(newDb.get("Temp").find({"email": email}).value()){
-                newDb.get("Temp").find({"email": email}).assign({"email": email, "code": random}).write();
-            }else newDb.get("Temp").push({"email": email, "code": random}).write();
+            if(db.get("Temp").find({"email": email}).value()){
+                db.get("Temp").find({"email": email}).assign({"email": email, "code": random}).write();
+            }else db.get("Temp").push({"email": email, "code": random}).write();
 
             const mailOptions = {
                 from: 'marcinkiewicz.kacper@gmail.com', // sender address
@@ -144,7 +143,7 @@ client.on("message", async msg => {
                         }});
                     });
 
-                    newDb.get("Temp").remove({"email": email}).write();
+                    db.get("Temp").remove({"email": email}).write();
                 }
                 else{
                     m.then(_m =>{
@@ -187,8 +186,8 @@ client.on("message", async msg => {
             }
 
             var exist = false;            
-            var listLength = newDb.get("emailList").size().value();
-            var list = newDb.get("emailList").value();
+            var listLength = db.get("emailList").size().value();
+            var list = db.get("emailList").value();
             
             list.forEach(_mail => {
                 if(list != null && listLength != 0){
@@ -210,14 +209,14 @@ client.on("message", async msg => {
 
             
             //Check code
-            if(newDb.get("Temp").find({"email": email}).value().code == code){
-                newDb.get("emailList").push(email).write();
+            if(db.get("Temp").find({"email": email}).value().code == code){
+                db.get("emailList").push(email).write();
                 msg.channel.send({embed: {
                     color: 0x04ff00,
                     description: "An email (**" + email + "**) has been successfully added to the database"
                 }});
 
-                newDb.get("Temp").remove({"email": email}).write();
+                db.get("Temp").remove({"email": email}).write();
             }
             else{
                 msg.channel.send({embed: {
@@ -248,8 +247,8 @@ client.on("message", async msg => {
             return;
         }
 
-        var listLength = newDb.get("emailList").size().value();
-        var list = newDb.get("emailList").value();
+        var listLength = db.get("emailList").size().value();
+        var list = db.get("emailList").value();
         if(list != null && listLength != 0){
             var counterOK = 0;
             var counterAll = 0;
@@ -312,11 +311,11 @@ client.on("message", async msg => {
                 return;
             }
             else{
-                msg.channel.send("```json\n"+JSON.stringify(newDb.value(), null, "\t")+ "```");
+                msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
             }
         }
         else if(msg.member.roles.find(r=> r.name == "Admin")){
-            msg.channel.send("```json\n"+JSON.stringify(newDb.value(), null, "\t")+ "```");
+            msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
         }
         else{
             msg.channel.send({embed:{
@@ -338,9 +337,9 @@ client.on("message", async msg => {
                 }
                 else{
                     //delete from db
-                    var indexToDelete = newDb.get("emailList").indexOf(args[0]).value();
+                    var indexToDelete = db.get("emailList").indexOf(args[0]).value();
                     if(indexToDelete != -1){
-                        if(newDb.get("emailList").splice(indexToDelete).write() != null){
+                        if(db.get("emailList").splice(indexToDelete).write() != null){
                             msg.channel.send({embed:{
                                 color: 0x04ff00,
                                 description: "Successfully removed (**"+ args[0] + "**) from database!"
