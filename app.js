@@ -49,9 +49,15 @@ client.on("error", error => {
     console.log();
 
     //Send error in PM to bot owner
-    client.fetchUser("329706346826039297").then(user =>{    
-        user.send("**Bot error: **\n" + error);
-    });
+    try{
+        client.fetchUser("329706346826039297").then(user =>{    
+            user.send("**Bot error: **\n" + error.message);
+        });
+    }
+    catch(e){
+        console.log("I cant send PM!");
+    }
+    
 });
 
 client.on("disconnect", ()=> console.log("\nDisconnected!"));
