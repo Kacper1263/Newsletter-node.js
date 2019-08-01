@@ -13,7 +13,7 @@
 //--------------------CONFIG--------------------//
 //                                              //
     const newsletterHTML = '<div style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is newsletter</div>';
-    const registerHTML = '<p style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is your verification code: <b style="background-color: white;border-radius: 10px;padding: 5px;color: black; margin-left: 5px;margin-right: 5px;"> %s </b></p>';
+    const registerHTML = '<div style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is your verification code: <b style="background-color: white;border-radius: 10px;padding: 5px;color: black; margin-left: 5px;margin-right: 5px;"> %s </b><br/><br/><br/><div style="color: #a2a2a2;font-size: 10px;text-decoration: underline;font-weight: bold;">If you don\'t try to register/delete an account, please ignore this message</div></div>';
 //                                              //
 //----------------------------------------------//
 
