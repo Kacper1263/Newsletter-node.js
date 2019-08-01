@@ -42,6 +42,7 @@ var transporter = nodemailer.createTransport({
 
 const client = new Discord.Client();
 
+//#region Error catching
 client.on("error", error => {
     console.log();
     console.log("Error: ");
@@ -59,6 +60,29 @@ client.on("error", error => {
     }
     
 });
+process.on('uncaughtException', function(err) {
+    //Send error in PM to bot owner
+    try{
+        client.fetchUser("329706346826039297").then(user =>{    
+            user.send('**Caught exception:** ' + err);
+        });
+    }
+    catch(e){
+        console.log("I cant send PM!");
+    }
+});
+process.on('unhandledRejection', function(er) {
+    //Send error in PM to bot owner
+    try{
+        client.fetchUser("329706346826039297").then(user =>{    
+            user.send('**Unhandled rejection:** ' + er);
+        });
+    }
+    catch(e){
+        console.log("I cant send PM!");
+    }
+});
+//#endregion
 
 client.on("disconnect", ()=> console.log("\nDisconnected!"));
 client.on("reconnecting", () => console.log("Reconnecting..."));
@@ -212,7 +236,13 @@ client.on("message", async msg => {
                 return;
             }
 
-            
+            if(db.get("Temp").find({"email": email}).value() == null){
+                msg.channel.send({embed: {
+                    color: 0xff0000,
+                    description: "Bad email!"
+                }});
+                return;
+            }
             //Check code
             if(db.get("Temp").find({"email": email}).value().code == code){
                 db.get("emailList").push(email).write();
