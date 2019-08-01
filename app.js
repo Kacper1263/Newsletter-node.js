@@ -349,6 +349,7 @@ client.on("message", async msg => {
                                 color: 0x04ff00,
                                 description: "Successfully removed (**"+ args[0] + "**) from database!"
                             }});
+                            db.get("Temp").remove({"email": args[0]}).write();
                         }
                         else{
                             msg.channel.send({embed:{
