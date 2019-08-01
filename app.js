@@ -63,6 +63,7 @@ client.on("error", error => {
 process.on('uncaughtException', function(err) {
     //Send error in PM to bot owner
     try{
+        console.log('**Caught exception:** ' + err);
         client.fetchUser("329706346826039297").then(user =>{    
             user.send('**Caught exception:** ' + err);
         });
@@ -74,6 +75,7 @@ process.on('uncaughtException', function(err) {
 process.on('unhandledRejection', function(er) {
     //Send error in PM to bot owner
     try{
+        console.log('**Caught exception:** ' + er);
         client.fetchUser("329706346826039297").then(user =>{    
             user.send('**Unhandled rejection:** ' + er);
         });
