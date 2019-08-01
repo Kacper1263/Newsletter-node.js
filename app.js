@@ -344,7 +344,7 @@ client.on("message", async msg => {
                     //delete from db
                     var indexToDelete = db.get("emailList").indexOf(args[0]).value();
                     if(indexToDelete != -1){
-                        if(db.get("emailList").splice(indexToDelete).write() != null){
+                        if(db.get("emailList").splice(indexToDelete, 1).write() != null){
                             msg.channel.send({embed:{
                                 color: 0x04ff00,
                                 description: "Successfully removed (**"+ args[0] + "**) from database!"
@@ -365,12 +365,70 @@ client.on("message", async msg => {
                     }
                 }
             }
-            else{
-                msg.channel.send({embed:{
-                    color: 0xffdd00,
-                    description: "Coming soon!"
-                }});
-                return;
+            else{                           
+                var email = args[0];
+                if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
+                    msg.channel.send({embed: {
+                        color: 0xffdd00,
+                        description: "**" + email + "** does not look like an email!"
+                    }});
+                    return;
+                }
+                                  
+                //check is email in db
+                var indexToDelete = db.get("emailList").indexOf(args[0]).value();
+                if(indexToDelete != -1){
+                    var rand1 = Math.floor(Math.random() * 10).toString();
+                    var rand2 = Math.floor(Math.random() * 10).toString();
+                    var rand3 = Math.floor(Math.random() * 10).toString(); 
+                    var rand4 = Math.floor(Math.random() * 10).toString();
+                    var random = (rand1 + rand2 + rand3 + rand4).toString();
+                    
+                    if(db.get("Temp").find({"email": email}).value()){
+                        db.get("Temp").find({"email": email}).assign({"email": email, "delCode": random}).write();
+                    }else db.get("Temp").push({"email": email, "delCode": random}).write();
+        
+                    const mailOptions = {
+                        from: 'marcinkiewicz.kacper@gmail.com', // sender address
+                        to: email, // list of receivers
+                        subject: 'Newsletter unregister confirm', // Subject line
+                        html: util.format(registerHTML, random) // replace %s (from const) with random code
+                    };
+                    
+                    var m = msg.channel.send({embed: {
+                        color: 0xffdd00,
+                        description: "Sending email..."
+                    }});
+        
+                    transporter.sendMail(mailOptions, function(err, info){
+                        if(err){
+                            m.then(_m =>{
+                                _m.edit({embed: {
+                                    color: 0xff0000,
+                                    description: "Error: \n**"+err+"**"
+                                }});
+                            });
+        
+                            db.get("Temp").remove({"email": email}).write();
+                        }
+                        else{
+                            m.then(_m =>{
+                                _m.edit({embed: {
+                                    color: 0x04ff00,
+                                    description: "The verification code has been sent. To unregister the email type (example): **>confirmUnregister " + email + " YOUR_CODE_HERE**"
+                                }});
+                            });                    
+                        }
+                    });
+                }
+                else{
+                    msg.channel.send({embed:{
+                        color: 0xff0000,
+                        description: "Email not found!"
+                    }});
+                    return;
+                }
+                ///check is email in db
             }
         }
         else{
@@ -382,8 +440,74 @@ client.on("message", async msg => {
         }
     }
 
+    if(command == "confirmUnregister" || command == "confirmDelete"){
+        if(args[0] == null || args[1] == null){
+            msg.channel.send({embed: {
+                color: 0xffdd00,
+                description: "You didn't give enough arguments! Example: **>confirmUnregister my.mail@gmail.com 1234**"
+            }});
+            return;
+        }
+        else{
+            var email = args[0];
+            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
+                msg.channel.send({embed: {
+                    color: 0xffdd00,
+                    description: "**" + email + "** does not look like an email!"
+                }});
+                return;
+            }
+
+            var code = args[1];
+            if(code.length != 4){
+                msg.channel.send({embed: {
+                    color: 0xff0000,
+                    description: "Bad verification code!"
+                }});
+                return;
+            }
+
+            //Check is email in db
+            var indexToDelete = db.get("emailList").indexOf(args[0]).value();
+            if(indexToDelete != -1){
+                //Check code
+                if(db.get("Temp").find({"email": email}).value().delCode == code){
+                    if(db.get("emailList").splice(indexToDelete, 1).write() != null){
+                        msg.channel.send({embed:{
+                            color: 0x04ff00,
+                            description: "Successfully removed (**"+ args[0] + "**) from database!"
+                        }});
+                        db.get("Temp").remove({"email": email}).write();
+                    }
+                    else{
+                        msg.channel.send({embed:{
+                            color: 0xff0000,
+                            description: "The email could not be deleted!"
+                        }});
+                    }
+                }
+                else{
+                    msg.channel.send({embed: {
+                        color: 0xff0000,
+                        description: "Bad verification code or email!"
+                    }});
+                    return;
+                }
+            }
+            else{
+                msg.channel.send({embed:{
+                    color: 0xff0000,
+                    description: "Email not found!"
+                }});
+            }
+        }
+    }
+
     if(command == "help"){
-        msg.reply("\nTo add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nTo delete your email from database enter **>unregister <your email>.** After receiving the verification code, enter **>confirmUnregister <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database");
+        msg.channel.send({embed:{
+            color: 0xd9d9d9,
+            description: "\nTo add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nTo delete your email from database enter **>unregister <your email>.** After receiving the verification code, enter **>confirmUnregister <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database"
+        }});
     }
 
 });
