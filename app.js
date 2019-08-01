@@ -21,17 +21,9 @@ const Discord = require("discord.js");
 const config = require('./config.json');
 var nodemailer = require('nodemailer');
 const util = require('util');
+const client = new Discord.Client();
 
-//New DB
-const low = require('lowdb')
-const FileSync = require('lowdb/adapters/FileSync')
- 
-const adapter = new FileSync('db.json')
-const db = low(adapter)
-///NewDB
-
-db.defaults({ Temp: [], emailList: [] }).write()
-
+//#region email transporter
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -39,8 +31,16 @@ var transporter = nodemailer.createTransport({
         pass: config.GmailPassword
     }
 });
+//#endregion
 
-const client = new Discord.Client();
+//#region db settings
+const low = require('lowdb')
+const FileSync = require('lowdb/adapters/FileSync') 
+const adapter = new FileSync('db.json')
+const db = low(adapter)
+//#endregion
+
+db.defaults({ Temp: [], emailList: [] }).write() //default variables for database
 
 //#region Error catching
 client.on("error", error => {
@@ -99,11 +99,11 @@ client.on("message", async msg => {
     if(msg.author.bot) return;
     if(msg.content.indexOf(">") !== 0) return;
 
-    const args = msg.content.slice(1).trim().split(/ +/g);
-    const command = args.shift();
+    const args = msg.content.slice(1).trim().split(/ +/g);  // trim - delete spaces at start and the end of text. split(/ +/g) split by spaces (even multiple)
+    const command = args.shift(); // delete first arg from array and save it in command
 
     if(command == "register"){
-        if(args[0] == null){
+        if(args[0] == null){ //Check if all arguments are given
             msg.channel.send({embed: {
                 color: 0xffdd00,
                 description: "You didn't give enough arguments! Example: **>register my.mail@gmail.com**"
@@ -113,7 +113,7 @@ client.on("message", async msg => {
         }        
         else{            
             var email = args[0];
-            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
+            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){ //Check if the argument looks like an email
                 msg.channel.send({embed: {
                     color: 0xffdd00,
                     description: "**" + email + "** does not look like an email!"
@@ -123,8 +123,9 @@ client.on("message", async msg => {
 
             var exist = false;
             var listLength = db.get("emailList").size().value();
-            var list = db.get("emailList").value();
+            var list = db.get("emailList").value(); //Get array of emails
             
+            //Check if the given email exists in the database
             list.forEach(_mail => {
                 if(list != null && listLength != 0){
                     if(_mail == email){
@@ -137,8 +138,7 @@ client.on("message", async msg => {
                         return;
                     }
                 }
-            });                              
-            
+            });             
             if(exist){
                 return;
             }
@@ -149,6 +149,7 @@ client.on("message", async msg => {
             var rand4 = Math.floor(Math.random() * 10).toString();
             var random = (rand1 + rand2 + rand3 + rand4).toString();
             
+            //If there is already a code in the database, then replace it. If not, add a new one.
             if(db.get("Temp").find({"email": email}).value()){
                 db.get("Temp").find({"email": email}).assign({"email": email, "code": random}).write();
             }else db.get("Temp").push({"email": email, "code": random}).write();
@@ -190,7 +191,7 @@ client.on("message", async msg => {
     }
 
     if(command == "confirmEmail"){
-        if(args[0] == null || args[1] == null){
+        if(args[0] == null || args[1] == null){ //Check if all arguments are given
             msg.channel.send({embed: {
                 color: 0xffdd00,
                 description: "You didn't give enough arguments! Example: **>confirmEmail my.mail@gmail.com 1234**"
@@ -199,7 +200,7 @@ client.on("message", async msg => {
         }
         else{
             var email = args[0];
-            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
+            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){ //Check if the argument looks like an email.
                 msg.channel.send({embed: {
                     color: 0xffdd00,
                     description: "**" + email + "** does not look like an email!"
@@ -220,6 +221,7 @@ client.on("message", async msg => {
             var listLength = db.get("emailList").size().value();
             var list = db.get("emailList").value();
             
+            //Check if the given email exists in the database.
             list.forEach(_mail => {
                 if(list != null && listLength != 0){
                     if(_mail == email){
@@ -232,12 +234,12 @@ client.on("message", async msg => {
                         return;
                     }
                 }
-            });      
-            
+            });            
             if(exist){
                 return;
             }
 
+            //Check if the provided email exists in the "Temp" to avoid errors.
             if(db.get("Temp").find({"email": email}).value() == null){
                 msg.channel.send({embed: {
                     color: 0xff0000,
@@ -267,7 +269,7 @@ client.on("message", async msg => {
     }
 
     if(command == "send"){
-        if(msg.member == null){
+        if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
             if(!msg.author.id == "329706346826039297"){ //Bot owner ID
                 msg.channel.send({embed:{
                     color: 0xff0000,
@@ -339,7 +341,7 @@ client.on("message", async msg => {
     }
 
     if(command == "all"){
-        if(msg.member == null){
+        if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
             if(!msg.author.id == "329706346826039297"){ //Bot owner ID
                 msg.channel.send({embed:{
                     color: 0xff0000,
@@ -364,7 +366,7 @@ client.on("message", async msg => {
 
     if(command == "unregister" || command == "delete"){  
         if(args[0] != null){
-            if(args[1] == "--force"){
+            if(args[1] == "--force"){ //Only the owner of the bot can delete email addresses from the database without confirmation with the code.
                 if(!msg.author.id == "329706346826039297"){ //Bot owner ID
                     msg.channel.send({embed:{
                         color: 0xff0000,
@@ -374,7 +376,7 @@ client.on("message", async msg => {
                 }
                 else{
                     //delete from db
-                    var indexToDelete = db.get("emailList").indexOf(args[0]).value();
+                    var indexToDelete = db.get("emailList").indexOf(args[0]).value(); //Find index in array by email
                     if(indexToDelete != -1){
                         if(db.get("emailList").splice(indexToDelete, 1).write() != null){
                             msg.channel.send({embed:{
@@ -409,7 +411,7 @@ client.on("message", async msg => {
                 }
                                   
                 //check is email in db
-                var indexToDelete = db.get("emailList").indexOf(args[0]).value();
+                var indexToDelete = db.get("emailList").indexOf(args[0]).value(); //Find index in array by email
                 if(indexToDelete != -1){
                     var rand1 = Math.floor(Math.random() * 10).toString();
                     var rand2 = Math.floor(Math.random() * 10).toString();
@@ -417,6 +419,7 @@ client.on("message", async msg => {
                     var rand4 = Math.floor(Math.random() * 10).toString();
                     var random = (rand1 + rand2 + rand3 + rand4).toString();
                     
+                    //If there is already a code in the database, then replace it. If not, add a new one.
                     if(db.get("Temp").find({"email": email}).value()){
                         db.get("Temp").find({"email": email}).assign({"email": email, "delCode": random}).write();
                     }else db.get("Temp").push({"email": email, "delCode": random}).write();
@@ -461,7 +464,6 @@ client.on("message", async msg => {
                     }});
                     return;
                 }
-                ///check is email in db
             }
         }
         else{
@@ -483,7 +485,7 @@ client.on("message", async msg => {
         }
         else{
             var email = args[0];
-            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){
+            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){ //Check if the argument looks like an email.
                 msg.channel.send({embed: {
                     color: 0xffdd00,
                     description: "**" + email + "** does not look like an email!"
@@ -501,7 +503,7 @@ client.on("message", async msg => {
             }
 
             //Check is email in db
-            var indexToDelete = db.get("emailList").indexOf(args[0]).value();
+            var indexToDelete = db.get("emailList").indexOf(args[0]).value(); //Find the index in the table by email
             if(indexToDelete != -1){
                 //Check code
                 if(db.get("Temp").find({"email": email}).value().delCode == code){
