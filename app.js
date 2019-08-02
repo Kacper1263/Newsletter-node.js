@@ -268,102 +268,6 @@ client.on("message", async msg => {
         }
     }
 
-    if(command == "send"){
-        if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
-            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
-                msg.channel.send({embed:{
-                    color: 0xff0000,
-                    description: "Permission denied!"
-                }});
-                return;
-            }
-        }
-        else if(!msg.member.roles.find(r=> r.name == "Admin")){
-            msg.channel.send({embed:{
-                color: 0xff0000,
-                description: "Permission denied!"
-            }});
-            return;
-        }
-
-        var listLength = db.get("emailList").size().value();
-        var list = db.get("emailList").value();
-        if(list != null && listLength != 0){
-            var counterOK = 0;
-            var counterAll = 0;
-            counterAll = list.length;
-            
-            var clr;
-            if(counterAll == counterOK) clr = 0x04ff00
-            else clr = 0xffdd00;
-            
-            var m = msg.channel.send({embed: {
-                color: clr,
-                description: "**" + counterOK + "** messages of **" + counterAll + "** have been sent"
-            }});
-
-            list.forEach(_mail =>{
-                const mailOptions = {
-                    from: 'marcinkiewicz.kacper@gmail.com', // sender address
-                    to: _mail, // list of receivers
-                    subject: 'Newsletter', // Subject line
-                    html: newsletterHTML// plain text body
-                  };
-    
-                transporter.sendMail(mailOptions, function(err, info){
-                    if(err){
-                        msg.reply({embed: {
-                            color: 0xff0000,
-                            description: "Error: \n**"+err+"**"
-                        }});
-                    }
-                    else{
-                        counterOK++;
-                        m.then(_m =>{
-                            if(counterAll == counterOK) clr = 0x04ff00
-                            else clr = 0xffdd00;
-                            
-                            _m.edit({embed: {
-                                color: clr,
-                                description: "**" + counterOK + "** messages of **" + counterAll + "** have been sent"
-                            }});
-                        });
-                    }
-                });
-            });
-        }
-        else{
-            msg.channel.send({embed: {
-                color: 0xff0000,
-                description: "Database is empty!"
-            }});
-        }
-    }
-
-    if(command == "all"){
-        if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
-            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
-                msg.channel.send({embed:{
-                    color: 0xff0000,
-                    description: "Permission denied!"
-                }});
-                return;
-            }
-            else{
-                msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
-            }
-        }
-        else if(msg.member.roles.find(r=> r.name == "Admin")){
-            msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
-        }
-        else{
-            msg.channel.send({embed:{
-                color: 0xff0000,
-                description: "Permission denied!"
-            }});
-        }
-    }
-
     if(command == "unregister" || command == "delete"){  
         if(args[0] != null){
             if(args[1] == "--force"){ //Only the owner of the bot can delete email addresses from the database without confirmation with the code.
@@ -538,10 +442,157 @@ client.on("message", async msg => {
         }
     }
 
+    if(command == "check"){
+        if(args[0] != null){
+            var email = args[0];
+            if(!email.includes("@") || email.includes("<") || email.includes(">") || email.startsWith(".")){ //Check if the argument looks like an email.
+                msg.channel.send({embed: {
+                    color: 0xffdd00,
+                    description: "**" + email + "** does not look like an email!"
+                }});
+                return;
+            }
+
+            var m = msg.channel.send({embed: {
+                color: 0xffdd00,
+                description: "Searching..."
+            }});
+            var listLength = db.get("emailList").size().value();
+            var list = db.get("emailList").value();
+            var exist = false;
+            //Check if the given email exists in the database.
+            if(list != null && listLength != 0){
+                list.forEach(_mail => {                    
+                    if(_mail == args[0]){
+                        m.then(_m => {
+                            _m.edit({embed: {
+                                color: 0x04ff00,
+                                description: "(**" + args[0] + "**) exists in the database"
+                            }});
+                        });
+                        exist = true;
+                        return;                            
+                    }
+                });   
+            }
+            if(!exist){
+                m.then(_m => {
+                    _m.edit({embed: {
+                        color: 0xffdd00,
+                        description: "(**" + args[0] + "**) doesn't exists in the database. \nIf you want to register, enter: **>register "+ args[0] +"**"
+                    }});
+                });                
+            }
+        }
+        else{
+            msg.channel.send({embed: {
+                color: 0xffdd00,
+                description: "You didn't give enough arguments! Example: **>check my.mail@gmail.com**"
+            }});
+            return;
+        }
+    }
+
+    if(command == "send"){
+        if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
+            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+                msg.channel.send({embed:{
+                    color: 0xff0000,
+                    description: "Permission denied!"
+                }});
+                return;
+            }
+        }
+        else if(!msg.member.roles.find(r=> r.name == "Admin")){
+            msg.channel.send({embed:{
+                color: 0xff0000,
+                description: "Permission denied!"
+            }});
+            return;
+        }
+
+        var listLength = db.get("emailList").size().value();
+        var list = db.get("emailList").value();
+        if(list != null && listLength != 0){
+            var counterOK = 0;
+            var counterAll = 0;
+            counterAll = list.length;
+            
+            var clr;
+            if(counterAll == counterOK) clr = 0x04ff00
+            else clr = 0xffdd00;
+            
+            var m = msg.channel.send({embed: {
+                color: clr,
+                description: "**" + counterOK + "** messages of **" + counterAll + "** have been sent"
+            }});
+
+            list.forEach(_mail =>{
+                const mailOptions = {
+                    from: 'marcinkiewicz.kacper@gmail.com', // sender address
+                    to: _mail, // list of receivers
+                    subject: 'Newsletter', // Subject line
+                    html: newsletterHTML// plain text body
+                  };
+    
+                transporter.sendMail(mailOptions, function(err, info){
+                    if(err){
+                        msg.reply({embed: {
+                            color: 0xff0000,
+                            description: "Error: \n**"+err+"**"
+                        }});
+                    }
+                    else{
+                        counterOK++;
+                        m.then(_m =>{
+                            if(counterAll == counterOK) clr = 0x04ff00
+                            else clr = 0xffdd00;
+                            
+                            _m.edit({embed: {
+                                color: clr,
+                                description: "**" + counterOK + "** messages of **" + counterAll + "** have been sent"
+                            }});
+                        });
+                    }
+                });
+            });
+        }
+        else{
+            msg.channel.send({embed: {
+                color: 0xff0000,
+                description: "Database is empty!"
+            }});
+        }
+    }
+
+    if(command == "all"){
+        if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
+            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+                msg.channel.send({embed:{
+                    color: 0xff0000,
+                    description: "Permission denied!"
+                }});
+                return;
+            }
+            else{
+                msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
+            }
+        }
+        else if(msg.member.roles.find(r=> r.name == "Admin")){
+            msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
+        }
+        else{
+            msg.channel.send({embed:{
+                color: 0xff0000,
+                description: "Permission denied!"
+            }});
+        }
+    }
+
     if(command == "help"){
         msg.channel.send({embed:{
             color: 0xd9d9d9,
-            description: "\nTo add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nTo delete your email from database enter **>unregister <your email>.** After receiving the verification code, enter **>confirmUnregister <your email> <received code>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database"
+            description: "\nTo add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nTo delete your email from database enter **>unregister <your email>.** After receiving the verification code, enter **>confirmUnregister <your email> <received code>**. \n\nIf you want to check if your email exists in the database, enter **>check <your email>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database"
         }});
     }
 
