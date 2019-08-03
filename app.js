@@ -99,7 +99,15 @@ client.on("message", async msg => {
     if(msg.author.bot) return;
     if(msg.content.indexOf(">") !== 0 && !msg.isMentioned(client.user)) return;
 
-    const args = msg.content.slice(1).trim().split(/ +/g);  // trim - delete spaces at start and the end of text. split(/ +/g) split by spaces (even multiple)
+    var args;
+    if(msg.isMentioned(client.user)){ //if you mention bot
+        const allArgs = msg.content.split(/ +/g);
+        const mention = allArgs.shift(); //cut bot mention from args
+        args = msg.content.slice(mention.length + 1).trim().split(/ +/g); //slice msg by mention length + 1 (space)
+    }
+    else{ //if you write bot prefix
+        args = msg.content.slice(1).trim().split(/ +/g);  // trim - delete spaces at start and the end of text. split(/ +/g) split by spaces (even multiple)
+    }
     const command = args.shift(); // delete first arg from array and save it in command
 
     if(command == "register"){
@@ -589,7 +597,7 @@ client.on("message", async msg => {
         }
     }
 
-    if(command == "help" || msg.isMentioned(client.user)){
+    if(command == "help" || (msg.isMentioned(client.user) && command == "")){
         msg.channel.send({embed:{
             color: 0xd9d9d9,
             description: "\nTo add your email to the newsletter enter **>register <your email>**. After receiving the verification code, enter **>confirmEmail <your email> <received code>**. \n\nTo delete your email from database enter **>unregister <your email>.** After receiving the verification code, enter **>confirmUnregister <your email> <received code>**. \n\nIf you want to check if your email exists in the database, enter **>check <your email>**. \n\nExamples: \n>register myMail@gmail.com \n>confirmEmail myMail@gmail.com 1234 \n\n**>send** - will send email to all registered users \n**>all** - will show all database"
