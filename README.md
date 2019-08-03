@@ -1,6 +1,6 @@
 # Change log:
 
-* 03.08.2019 - <b>Merged branch with new database with master<b>
+* 03.08.2019 - <b>Merged branch with new database with master</b>
 - 31.07.2019 - <b>New branch with new db</b>
    - [x] - Rebuild the old code to work with the new database
    - [x] - Add function to delete email from array (Only for bot owner (--force))
