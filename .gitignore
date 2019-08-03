@@ -3,3 +3,4 @@ config.json
 json.sqlite
 runBot.bat
 dontUpload.txt
+db.json
