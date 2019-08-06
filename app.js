@@ -15,6 +15,8 @@
     const newsletterHTML = '<div style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is newsletter</div>';
     const registerHTML = '<div style="background-color: #303030;color: white;border-radius: 10px;padding: 15px;text-align: center;">This is your verification code: <b style="background-color: white;border-radius: 10px;padding: 5px;color: black; margin-left: 5px;margin-right: 5px;"> %s </b><br/><br/><br/><div style="color: #a2a2a2;font-size: 10px;text-decoration: underline;font-weight: bold;">If you don\'t try to register/delete an account, please ignore this message</div></div>';
 //                                              //
+    const ownerID = "329706346826039297"; //User ID from Discord
+    const roleWithPermissions = "Admin" //The name (string) of the role that has full bot privileges.
 //----------------------------------------------//
 
 const Discord = require("discord.js");
@@ -51,7 +53,7 @@ client.on("error", error => {
 
     //Send error in PM to bot owner
     try{
-        client.fetchUser("329706346826039297").then(user =>{    
+        client.fetchUser(ownerID).then(user =>{    
             user.send("**Bot error: **\n" + error.message);
         });
     }
@@ -64,7 +66,7 @@ process.on('uncaughtException', function(err) {
     //Send error in PM to bot owner
     try{
         console.log('**Caught exception:** ' + err);
-        client.fetchUser("329706346826039297").then(user =>{    
+        client.fetchUser(ownerID).then(user =>{    
             user.send('**Caught exception:** ' + err);
         });
     }
@@ -76,7 +78,7 @@ process.on('unhandledRejection', function(er) {
     //Send error in PM to bot owner
     try{
         console.log('**Caught exception:** ' + er);
-        client.fetchUser("329706346826039297").then(user =>{    
+        client.fetchUser(ownerID).then(user =>{    
             user.send('**Unhandled rejection:** ' + er);
         });
     }
@@ -279,7 +281,7 @@ client.on("message", async msg => {
     if(command == "unregister" || command == "delete"){  
         if(args[0] != null){
             if(args[1] == "--force"){ //Only the owner of the bot can delete email addresses from the database without confirmation with the code.
-                if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+                if(msg.author.id != ownerID){ //Bot owner ID
                     msg.channel.send({embed:{
                         color: 0xff0000,
                         description: "Permission denied!"
@@ -503,7 +505,7 @@ client.on("message", async msg => {
 
     if(command == "send"){
         if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
-            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+            if(msg.author.id != ownerID){ //Bot owner ID
                 msg.channel.send({embed:{
                     color: 0xff0000,
                     description: "Permission denied!"
@@ -511,7 +513,7 @@ client.on("message", async msg => {
                 return;
             }
         }
-        else if(!msg.member.roles.find(r=> r.name == "Admin")){
+        else if(!msg.member.roles.find(r=> r.name == roleWithPermissions)){
             msg.channel.send({embed:{
                 color: 0xff0000,
                 description: "Permission denied!"
@@ -575,7 +577,7 @@ client.on("message", async msg => {
 
     if(command == "all"){
         if(msg.member == null){ //If null, then the message was sent to the bot in a private message.
-            if(!msg.author.id == "329706346826039297"){ //Bot owner ID
+            if(msg.author.id != ownerID){ //Bot owner ID
                 msg.channel.send({embed:{
                     color: 0xff0000,
                     description: "Permission denied!"
@@ -586,7 +588,7 @@ client.on("message", async msg => {
                 msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
             }
         }
-        else if(msg.member.roles.find(r=> r.name == "Admin")){
+        else if(msg.member.roles.find(r=> r.name == roleWithPermissions)){
             msg.channel.send("```json\n"+JSON.stringify(db.value(), null, "\t")+ "```");
         }
         else{
