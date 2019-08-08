@@ -1,5 +1,6 @@
 # Change log:
 
+* 08.08.2019 - Minor text correction in logs
 * 06.08.2019<br/> - Variable for owner ID and administrative role name <br/> - FIXED: Checking user ID in private message didn't work.
 * 03.08.2019 - <b>Merged branch with new database with master</b>
 - 31.07.2019 - <b>New branch with new db</b>

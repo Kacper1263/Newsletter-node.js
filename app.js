@@ -77,7 +77,7 @@ process.on('uncaughtException', function(err) {
 process.on('unhandledRejection', function(er) {
     //Send error in PM to bot owner
     try{
-        console.log('**Caught exception:** ' + er);
+        console.log('**Unhandled rejection:** ' + er);
         client.fetchUser(ownerID).then(user =>{    
             user.send('**Unhandled rejection:** ' + er);
         });
