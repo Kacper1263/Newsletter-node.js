@@ -47,7 +47,7 @@ db.defaults({ Temp: [], emailList: [] }).write() //default variables for databas
 //#region Error catching
 client.on("error", error => {
     console.log();
-    console.log("Error: ");
+    console.log("Bot error: ");
     console.log(error);
     console.log();
 
@@ -74,12 +74,16 @@ process.on('uncaughtException', function(err) {
         console.log("I cant send PM!");
     }
 });
-process.on('unhandledRejection', function(er) {
+process.on('unhandledRejection', (err, promise) => {
+    if(err.message == "getaddrinfo ENOTFOUND discordapp.com discordapp.com:443"){ //Ignore this error
+        console.log("Ignored unhandled rejection: " + err.message)
+        return
+    }
     //Send error in PM to bot owner
     try{
-        console.log('**Unhandled rejection:** ' + er);
+        console.log('**Unhandled rejection:** ' + err);        
         client.fetchUser(ownerID).then(user =>{    
-            user.send('**Unhandled rejection:** ' + er);
+            user.send('**Unhandled rejection:** ' + err);
         });
     }
     catch(e){
